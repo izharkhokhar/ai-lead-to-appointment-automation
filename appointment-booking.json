@@ -1,0 +1,985 @@
+{
+  "name": "Appointment Booking Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "events": [
+          "invitee.canceled",
+          "invitee.created"
+        ]
+      },
+      "type": "n8n-nodes-base.calendlyTrigger",
+      "typeVersion": 2,
+      "position": [
+        -48,
+        -160
+      ],
+      "id": "b72fe5ad-6ee8-4690-835b-5b9fa5d2c18b",
+      "name": "Calendly Trigger"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.event }}",
+                    "rightValue": "=invitee.created",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "a185c163-326b-464e-ae54-572b796e7f03"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Appointment Booked"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "5e6d275d-c47c-437e-8c1c-6d3095de6cec",
+                    "leftValue": "={{ $json.event }}",
+                    "rightValue": "invitee.canceled",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Appointment Cancelled"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        176,
+        -160
+      ],
+      "id": "af2cb451-bef8-42dd-bb55-176a3b5cc6b2",
+      "name": "Booking Event Router"
+    },
+    {
+      "parameters": {
+        "sendTo": "=owner@example.com",
+        "subject": "=New Appointment Booked - {{ $json.Name }}",
+        "message": "=A new consultation has been booked.\n\nName: {{ $json.Name }}\nEmail: {{ $json.Email }}\nPhone: {{ $json.Phone }}\nCompany: {{ $json.Company }}\nService: {{ $json.Service }}\nLead Quality: {{ $json['Lead Quality'] }}\n\nAppointment Time:\n{{ $json['Appointment Time'] }}\n\nPlease review the lead details in the CRM.\n\nBest regards,\nLead Automation System",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        848,
+        -448
+      ],
+      "id": "794f06eb-1f97-435f-a480-83066b62a76e",
+      "name": "Notify Owner - Appointment Booked"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Lead Management CRM"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Email",
+              "lookupValue": "={{ $('Calendly Trigger').item.json.payload.email }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        400,
+        -256
+      ],
+      "id": "575c49df-e45e-49a9-8ea3-d0a010dcd067",
+      "name": "Get Lead from CRM"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Lead Management CRM"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Email": "={{ $json.Email }}",
+            "Status": "Appointment Booked",
+            "Appointment Time": "={{ $('Calendly Trigger').item.json.payload.scheduled_event.start_time }}"
+          },
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Service",
+              "displayName": "Service",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Budget",
+              "displayName": "Budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Message ",
+              "displayName": "Message ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Lead Quality",
+              "displayName": "Lead Quality",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Appointment Time",
+              "displayName": "Appointment Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        624,
+        -256
+      ],
+      "id": "119f567d-0103-45e5-ae8f-6270ba6ef95c",
+      "name": "Update CRM - Appointment Booked"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Lead Management CRM"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Email": "={{ $('Calendly Trigger').item.json.payload.email }}",
+            "Status": "Appointment Cancelled"
+          },
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Service",
+              "displayName": "Service",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Budget",
+              "displayName": "Budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Message ",
+              "displayName": "Message ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lead Quality",
+              "displayName": "Lead Quality",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Appointment Time",
+              "displayName": "Appointment Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        400,
+        -64
+      ],
+      "id": "67d26a7b-deb9-41dd-a4b7-17e4f901580d",
+      "name": "Appointment Cancelled"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Lead Management CRM"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Email",
+              "lookupValue": "={{ $('Calendly Trigger').item.json.payload.email }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1072,
+        -256
+      ],
+      "id": "88602212-b56d-4c79-9bb1-9db5e6ea03c2",
+      "name": "Check Appointment Status"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "dba5484f-dbf4-4e56-ac20-612590cfd94a",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "Appointment Booked",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1296,
+        -256
+      ],
+      "id": "030bb420-3102-4e53-82ba-e913e7f85eaa",
+      "name": "Is Appointment Still Booked?"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Calendly Trigger').item.json.payload.email }}",
+        "subject": "Reminder: Your consultation is tomorrow",
+        "message": "=Hi {{ $('Calendly Trigger').item.json.payload.name }},\n\nJust a friendly reminder that your Free Consultation is scheduled for tomorrow.\n\nWe look forward to speaking with you.\n\nBest regards,\nSales Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1520,
+        -256
+      ],
+      "id": "240d25e5-4912-42ca-bca4-c6106563bc2a",
+      "name": "Send Appointment Reminder"
+    },
+    {
+      "parameters": {
+        "resume": "specificTime",
+        "dateTime": "={{ DateTime.fromISO($('Calendly Trigger').item.json.payload.scheduled_event.end_time).plus({ hours: 1 }).toISO() }}"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        848,
+        -64
+      ],
+      "id": "c0c02ad3-8f57-44f6-b390-569c8e59621e",
+      "name": "Wait Until After Consultation"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "317cd922-3f22-4d2a-819c-f6bb85b1a52a",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "Appointment Booked",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1296,
+        -64
+      ],
+      "id": "6b599740-801c-450f-80aa-fe96ad0d8f95",
+      "name": "Was Consultation Still Active?"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Lead Management CRM"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Email": "={{ $('Check Consultation Status').item.json.Email }}",
+            "Status": "Consultation Follow-Up Sent"
+          },
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Service",
+              "displayName": "Service",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Budget",
+              "displayName": "Budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Message ",
+              "displayName": "Message ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lead Quality",
+              "displayName": "Lead Quality",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Appointment Time",
+              "displayName": "Appointment Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1744,
+        -64
+      ],
+      "id": "fb40428e-8976-4ed9-a858-8505ac4949ac",
+      "name": "Mark Consultation Follow-Up Sent"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Check Consultation Status').item.json.Email }}",
+        "subject": "Thank you for your consultation",
+        "message": "=Hi {{ $('Check Consultation Status').item.json.Name }},\n\nThank you for taking the time to speak with us today about {{ $('Check Consultation Status').item.json.Service }}.\n\nIt was great learning more about your needs. If you have any questions or would like to discuss the next steps, please feel free to reply to this email.\n\nBest regards,\nSales Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1520,
+        -64
+      ],
+      "id": "0c73e742-bcb6-49b7-92c7-567c31e4ce6b",
+      "name": "Post-Consultation Thank You"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Lead Management CRM"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Email",
+              "lookupValue": "={{ $('Calendly Trigger').item.json.payload.email }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1072,
+        -64
+      ],
+      "id": "373723cc-33b4-4475-b811-46b631cdf696",
+      "name": "Check Consultation Status"
+    },
+    {
+      "parameters": {
+        "resume": "specificTime",
+        "dateTime": "={{ DateTime.fromISO($('Calendly Trigger').item.json.payload.scheduled_event.start_time).minus({ hours: 24 }).toISO() }}"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        848,
+        -256
+      ],
+      "id": "c04e44b6-3ec9-4a8d-ae4d-f1ae7704093c",
+      "name": "Wait Until Appointment Reminder"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Calendly Trigger": {
+      "main": [
+        [
+          {
+            "node": "Booking Event Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Booking Event Router": {
+      "main": [
+        [
+          {
+            "node": "Get Lead from CRM",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Appointment Cancelled",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Owner - Appointment Booked": {
+      "main": [
+        []
+      ]
+    },
+    "Get Lead from CRM": {
+      "main": [
+        [
+          {
+            "node": "Update CRM - Appointment Booked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update CRM - Appointment Booked1": {
+      "main": [
+        [
+          {
+            "node": "Notify Owner - Appointment Booked",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Wait Until Appointment Reminder",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Wait Until After Consultation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Appointment Status1": {
+      "main": [
+        [
+          {
+            "node": "Is Appointment Still Booked?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Appointment Still Booked?1": {
+      "main": [
+        [
+          {
+            "node": "Send Appointment Reminder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Appointment Reminder": {
+      "main": [
+        []
+      ]
+    },
+    "Wait Until After Consultation": {
+      "main": [
+        [
+          {
+            "node": "Check Consultation Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Was Consultation Still Active?": {
+      "main": [
+        [
+          {
+            "node": "Post-Consultation Thank You",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Consultation Follow-Up Sent": {
+      "main": [
+        []
+      ]
+    },
+    "Check Consultation Status": {
+      "main": [
+        [
+          {
+            "node": "Was Consultation Still Active?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post-Consultation Thank You": {
+      "main": [
+        [
+          {
+            "node": "Mark Consultation Follow-Up Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Until Appointment Reminder": {
+      "main": [
+        [
+          {
+            "node": "Check Appointment Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}

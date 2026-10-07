@@ -1,0 +1,1272 @@
+{
+  "name": "Lead to Appointment Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "=You are a professional sales assistant for a digital marketing agency.\n\nWrite a short and personalised email reply to a potential customer.\n\nRules:\n- Thank them for their enquiry.\n- Address them by their first name when possible.\n- Mention the service they are interested in.\n- Show interest in learning more about their business needs.\n- Encourage them to book a free consultation to discuss their requirements.\n- Keep the tone friendly and professional.\n- Do not describe them as a \"normal lead\".\n- Do not mention their AI lead classification.\n- Do not invent prices, guarantees, results or availability.\n- Do not use placeholders.\n- Do not include a subject line.\n- End exactly with:\n\nBest regards,\nSales Team\n\nReturn only the email body."
+            },
+            {
+              "content": "=Name: {{ $('Normalize Lead Data').item.json.name }}\n\nCompany: {{ $('Normalize Lead Data').item.json.company }}\n\nService: {{ $('Normalize Lead Data').item.json.service }}\n\nBudget: {{ $('Normalize Lead Data').item.json.budget }}\n\nMessage:\n{{ $('Normalize Lead Data').item.json.message }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1472,
+        -160
+      ],
+      "id": "4ec2006c-e72a-48df-8ee4-961a62f21a6c",
+      "name": "Generate Normal Lead Response"
+    },
+    {
+      "parameters": {
+        "sendTo": "owner@example.com",
+        "subject": "High-value lead has not booked after 6 hours",
+        "message": "=High-value lead still has not booked a consultation.\n\nName: {{ $('Normalize Lead Data').item.json.name }}\nCompany: {{ $('Normalize Lead Data').item.json.company }}\nEmail: {{ $('Normalize Lead Data').item.json.email }}\nPhone: {{ $('Normalize Lead Data').item.json.phone }}\nService: {{ $('Normalize Lead Data').item.json.service }}\nBudget: {{ $('Normalize Lead Data').item.json.budget }}\n\nPlease consider following up manually.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        3168,
+        -496
+      ],
+      "id": "13c0474c-a58d-4210-b57a-b21055c6ee50",
+      "name": "Alert Owner - High Lead Not Booked"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "new-lead",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        -160
+      ],
+      "id": "e6158ee7-7387-477d-ab3d-59c613f54e1f",
+      "name": "New Lead Webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "890377e3-fe97-48bd-b990-2e2e9de2eaf8",
+              "leftValue": "=={{ $json.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "31340e27-d37b-4c08-8d33-0d0ca003e00c",
+              "leftValue": "={{ $json.name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        -160
+      ],
+      "id": "53280f7e-cb1d-4ee4-bae1-2865c3f50f8c",
+      "name": "Validate Lead"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d96564c5-f3ab-4ce8-9d95-2744a3f17c65",
+              "name": "name",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "db1a8d96-d16d-457e-abf1-049059a9c87f",
+              "name": "email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "c9c7f6bc-c7fc-4831-a039-5d8ace3ae173",
+              "name": "phone",
+              "value": "={{ $json.body.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "a3b9da00-aba8-4ebb-9e74-a5fd742ea28d",
+              "name": "company",
+              "value": "={{ $json.body.company }}",
+              "type": "string"
+            },
+            {
+              "id": "67d3c651-99e0-4b31-b5f3-31942d95c9e4",
+              "name": "service",
+              "value": "={{ $json.body.service }}",
+              "type": "string"
+            },
+            {
+              "id": "e2ee8fbf-a947-4327-ae5e-3561a9f2b767",
+              "name": "budget",
+              "value": "={{ $json.body.budget }}",
+              "type": "string"
+            },
+            {
+              "id": "b831c189-f25a-4e8b-9c0f-3b2f4872a1e8",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            },
+            {
+              "id": "8b3d8015-b197-4b6e-835d-42b113d7c186",
+              "name": "source",
+              "value": "={{ $json.body.source }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        -160
+      ],
+      "id": "1a49a455-f023-4409-a3ae-d336e3ec8606",
+      "name": "Normalize Lead Data"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "=You are a lead qualification assistant for a digital marketing agency.\n\nAnalyse the incoming lead and classify it as exactly one of:\n\nHIGH\nNORMAL\nLOW\n\nHIGH:\n- Strong buying intent\n- Clear business requirement\n- Good budget\n- Wants to start soon or clearly needs the service\n- Appears likely to become a paying client\n\nNORMAL:\n- Genuine potential customer\n- Interested in a service\n- Moderate or unclear budget\n- May need further discussion before booking\n\nLOW:\n- Very low or no budget\n- Vague enquiry\n- Weak buying intent\n- Student/job seeker/vendor enquiry rather than a potential customer\n- Not a strong potential client\n\nReturn ONLY one word:\nHIGH\nNORMAL\nLOW\n\nDo not include explanations, JSON, markdown or any other text."
+            },
+            {
+              "content": "=Name: {{ $json.name }}\nCompany: {{ $json.company }}\nService: {{ $json.service }}\nBudget: {{ $json.budget }}\nMessage: {{ $json.message }}\nLead Source: {{ $json.source }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        -160
+      ],
+      "id": "1ffcdec0-b1ff-451c-91fd-bf4f535563b3",
+      "name": "AI Lead Qualification"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output[0].content[0].text }}",
+                    "rightValue": "HIGH",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "b038dc93-575b-4e8c-a6f5-6e7532837058"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "High Value"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ff289a4b-723a-4551-b786-8a59c23afe70",
+                    "leftValue": "={{ $json.output[0].content[0].text }}",
+                    "rightValue": "NORMAL",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Normal Lead"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "6460e836-3e3c-4022-bbb1-3a62fd362d48",
+                    "leftValue": "={{ $json.output[0].content[0].text }}",
+                    "rightValue": "LOW",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Low Lead"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1024,
+        -176
+      ],
+      "id": "ffcf1e7a-ebec-4658-874d-7e50e0866936",
+      "name": "Lead Quality Router"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Lead Management CRM"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{ $now.toFormat('dd/MM/yyyy HH:mm') }}",
+            "Name": "={{ $('Normalize Lead Data').item.json.name }}",
+            "Email": "={{ $('Normalize Lead Data').item.json.email }}",
+            "Phone": "={{ $('Normalize Lead Data').item.json.phone }}",
+            "Company": "={{ $('Normalize Lead Data').item.json.company }}",
+            "Service": "={{ $('Normalize Lead Data').item.json.service }}",
+            "Budget": "={{ $('Normalize Lead Data').item.json.budget }}",
+            "Message ": "={{ $('Normalize Lead Data').item.json.message }}",
+            "Source": "={{ $('Normalize Lead Data').item.json.source }}",
+            "Lead Quality": "HIGH",
+            "Status": "New Lead"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Service",
+              "displayName": "Service",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Budget",
+              "displayName": "Budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Message ",
+              "displayName": "Message ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Lead Quality",
+              "displayName": "Lead Quality",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1248,
+        -352
+      ],
+      "id": "9460eca3-a3e3-42d3-b145-daf73d134e01",
+      "name": "Save High Lead to CRM",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "=You are a professional sales assistant for a digital marketing agency.\n\nWrite a short and personalised email reply to a new potential client.\n\nRules:\n- Thank the lead for contacting us.\n- Address them by their first name when possible.\n- Mention the service they are interested in.\n- Mention their company naturally when appropriate.\n- Show interest in understanding their business goals.\n- Encourage them to book a free consultation.\n- Do not invent prices, results, guarantees, availability, or company information.\n- Do not promise specific results.\n- Keep the email concise, friendly and professional.\n- Do not include a subject line.\n- Do not use placeholders such as [Name] or [Company].\n- End exactly with:\n\nBest regards,\nSales Team\n\nReturn only the email body."
+            },
+            {
+              "content": "=Name: {{ $('Normalize Lead Data').item.json.name }}\n\nCompany: {{ $('Normalize Lead Data').item.json.company }}\n\nService: {{ $('Normalize Lead Data').item.json.service }}\n\nBudget: {{ $('Normalize Lead Data').item.json.budget }}\n\nLead's message:\n{{ $('Normalize Lead Data').item.json.message }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1472,
+        -352
+      ],
+      "id": "c662a812-33a6-46bf-b45a-89a85f3ed006",
+      "name": "Generate High Lead Response"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Normalize Lead Data').item.json.email }}",
+        "subject": "=Free Consultation – {{ $('Normalize Lead Data').item.json.service }}",
+        "message": "={{ $json.output[0].content[0].text }}\n\nBook your free consultation here:\nhttps://calendly.com/YOUR_USERNAME/YOUR_EVENT",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1824,
+        -352
+      ],
+      "id": "d5fdc750-13c6-4e81-8ee1-a4dff49f5c2d",
+      "name": "Send High Lead Email"
+    },
+    {
+      "parameters": {
+        "sendTo": "owner@example.com",
+        "subject": "=🔥 High-Value Lead: {{ $('Normalize Lead Data').item.json.company }}",
+        "message": "=New high-value lead received.\n\nName: {{ $('Normalize Lead Data').item.json.name }}\nCompany: {{ $('Normalize Lead Data').item.json.company }}\nEmail: {{ $('Normalize Lead Data').item.json.email }}\nPhone: {{ $('Normalize Lead Data').item.json.phone }}\nService: {{ $('Normalize Lead Data').item.json.service }}\nBudget: {{ $('Normalize Lead Data').item.json.budget }}\nSource: {{ $('Normalize Lead Data').item.json.source }}\n\nMessage:\n{{ $('Normalize Lead Data').item.json.message }}\n\nThis lead has been classified as HIGH priority. Please follow up as soon as possible.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2048,
+        -352
+      ],
+      "id": "ceff695c-790b-4d5d-9a0a-ae017eede58f",
+      "name": "Notify Owner - High Lead"
+    },
+    {
+      "parameters": {
+        "amount": 6,
+        "unit": "hours"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2272,
+        -352
+      ],
+      "id": "e506b302-ae0a-41a1-88df-d78c295f6421",
+      "name": "Wait 6 Hours for Booking"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Lead Management CRM"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Email",
+              "lookupValue": "={{ $('Normalize Lead Data').item.json.email }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2496,
+        -352
+      ],
+      "id": "9445382f-0e6f-4736-a54e-4cc8ab487bc7",
+      "name": "Check High Lead Booking Status"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "bb8891fc-9856-4017-9fc0-cf92854186e9",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "New Lead",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2720,
+        -352
+      ],
+      "id": "79e7b1d5-e931-4250-a4a1-26bd90972d3b",
+      "name": "Is High Lead Still Unbooked?"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Normalize Lead Data').item.json.email }}",
+        "subject": "=Following up on your {{ $('Normalize Lead Data').item.json.service }} enquiry",
+        "message": "=Hi {{ $('Normalize Lead Data').item.json.name }},\n\nI wanted to follow up on your enquiry about {{ $('Normalize Lead Data').item.json.service }}.\n\nWe’d be happy to discuss your goals and see how we may be able to help {{ $('Normalize Lead Data').item.json.company }}.\n\nYou can book a free consultation here:\n\nhttps://calendly.com/YOUR_USERNAME/YOUR_EVENT\n\nBest regards,\nSales Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2896,
+        -496
+      ],
+      "id": "c6a7e662-967d-4d2a-9924-d9c91793c0aa",
+      "name": "Send High Lead Follow-Up"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Lead Management CRM"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{ $now.toFormat('dd/MM/yyyy HH:mm') }}",
+            "Name": "={{ $('Normalize Lead Data').item.json.name }}",
+            "Email": "={{ $('Normalize Lead Data').item.json.email }}",
+            "Phone": "={{ $('Normalize Lead Data').item.json.phone }}",
+            "Company": "={{ $('Normalize Lead Data').item.json.company }}",
+            "Service": "={{ $('Normalize Lead Data').item.json.service }}",
+            "Budget": "={{ $('Normalize Lead Data').item.json.budget }}",
+            "Message ": "={{ $('Normalize Lead Data').item.json.message }}",
+            "Source": "={{ $('Normalize Lead Data').item.json.source }}",
+            "Lead Quality": "NORMAL",
+            "Status": "New Lead"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Service",
+              "displayName": "Service",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Budget",
+              "displayName": "Budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Message ",
+              "displayName": "Message ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lead Quality",
+              "displayName": "Lead Quality",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Appointment Time",
+              "displayName": "Appointment Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1248,
+        -160
+      ],
+      "id": "f5ddd37c-208b-45c1-8d68-8b141bc1f5dc",
+      "name": "Save Normal Lead to CRM"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Normalize Lead Data').item.json.email }}",
+        "subject": "=Thank you for your enquiry – {{ $('Normalize Lead Data').item.json.service }}",
+        "message": "={{ $json.output[0].content[0].text }}  Book a free consultation here: https://calendly.com/YOUR_USERNAME/YOUR_EVENT",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1824,
+        -160
+      ],
+      "id": "99708b67-7078-41ac-9c66-17fb03d55d69",
+      "name": "Send Normal Lead Email"
+    },
+    {
+      "parameters": {
+        "amount": 24,
+        "unit": "hours"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2048,
+        -160
+      ],
+      "id": "05ccdb49-fdd5-4c6c-8a19-d8cbd34a7d0b",
+      "name": "Wait 24 Hours for Booking"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Lead Management CRM"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Email",
+              "lookupValue": "={{ $('Normalize Lead Data').item.json.email }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2272,
+        -160
+      ],
+      "id": "f69b1f84-5e86-4209-adda-59ad5ad2a5ac",
+      "name": "Check Normal Lead Booking Status"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3b66dc16-fdba-4cff-8af9-23fdb9fc8466",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "New Lead",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2496,
+        -160
+      ],
+      "id": "8b426b7f-7fb8-409d-9c42-9f6d6c705609",
+      "name": "Is Normal Lead Still Unbooked?"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Normalize Lead Data').item.json.email }}",
+        "subject": "Just checking in about your enquiry",
+        "message": "=Hi {{ $('Normalize Lead Data').item.json.name }},\n\nI just wanted to follow up on your enquiry about {{ $('Normalize Lead Data').item.json.service }}.\n\nIf you'd still like to discuss how we may be able to help, you can book a free consultation here:\n\nhttps://calendly.com/YOUR_USERNAME/YOUR_EVENT\n\nBest regards,\nSales Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2720,
+        -160
+      ],
+      "id": "a91f1de1-e52b-4895-b2dd-21f35bd5ace9",
+      "name": "Send Normal Lead Follow-Up"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "Lead Management CRM"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $('Normalize Lead Data').item.json.name }}",
+            "Date": "={{ $now.toFormat('dd/MM/yyyy HH:mm') }}",
+            "Email": "={{ $('Normalize Lead Data').item.json.email }}",
+            "Phone": "={{ $('Normalize Lead Data').item.json.phone }}",
+            "Company": "={{ $('Normalize Lead Data').item.json.company }}",
+            "Service": "={{ $('Normalize Lead Data').item.json.service }}",
+            "Budget": "={{ $('Normalize Lead Data').item.json.budget }}",
+            "Message ": "={{ $('Normalize Lead Data').item.json.message }}",
+            "Source": "={{ $('Normalize Lead Data').item.json.source }}",
+            "Lead Quality": "LOW",
+            "Status": "Low Priority"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Company",
+              "displayName": "Company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Service",
+              "displayName": "Service",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Budget",
+              "displayName": "Budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Message ",
+              "displayName": "Message ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Source",
+              "displayName": "Source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Lead Quality",
+              "displayName": "Lead Quality",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Appointment Time",
+              "displayName": "Appointment Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1248,
+        32
+      ],
+      "id": "ee0b6876-52ec-46d1-b7e8-5751914c0ced",
+      "name": "Save Low Lead to CRM"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Generate Normal Lead Response": {
+      "main": [
+        [
+          {
+            "node": "Send Normal Lead Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New Lead Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Lead": {
+      "main": [
+        [
+          {
+            "node": "AI Lead Qualification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Lead Data": {
+      "main": [
+        [
+          {
+            "node": "Validate Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Lead Qualification": {
+      "main": [
+        [
+          {
+            "node": "Lead Quality Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead Quality Router": {
+      "main": [
+        [
+          {
+            "node": "Save High Lead to CRM",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Save Normal Lead to CRM",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Save Low Lead to CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save High Lead to CRM": {
+      "main": [
+        [
+          {
+            "node": "Generate High Lead Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate High Lead Response": {
+      "main": [
+        [
+          {
+            "node": "Send High Lead Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send High Lead Email": {
+      "main": [
+        [
+          {
+            "node": "Notify Owner - High Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Owner - High Lead": {
+      "main": [
+        [
+          {
+            "node": "Wait 6 Hours for Booking",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 6 Hours for Booking": {
+      "main": [
+        [
+          {
+            "node": "Check High Lead Booking Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check High Lead Booking Status": {
+      "main": [
+        [
+          {
+            "node": "Is High Lead Still Unbooked?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is High Lead Still Unbooked?": {
+      "main": [
+        [
+          {
+            "node": "Send High Lead Follow-Up",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send High Lead Follow-Up": {
+      "main": [
+        [
+          {
+            "node": "Alert Owner - High Lead Not Booked",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Normal Lead to CRM": {
+      "main": [
+        [
+          {
+            "node": "Generate Normal Lead Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Normal Lead Email": {
+      "main": [
+        [
+          {
+            "node": "Wait 24 Hours for Booking",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 24 Hours for Booking": {
+      "main": [
+        [
+          {
+            "node": "Check Normal Lead Booking Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Normal Lead Booking Status": {
+      "main": [
+        [
+          {
+            "node": "Is Normal Lead Still Unbooked?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Normal Lead Still Unbooked?": {
+      "main": [
+        [
+          {
+            "node": "Send Normal Lead Follow-Up",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}
